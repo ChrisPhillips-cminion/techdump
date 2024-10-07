@@ -10,7 +10,7 @@ spec:
   license:
     # By installing this product you accept the license terms at https://ibm.biz/ea-license
     accept: true
-    license: “L-HRZF-DWHH7A”
+    license: L-HRZF-DWHH7A
     use: "EventAutomationProduction"
   adminApi: {}
   adminUI:
