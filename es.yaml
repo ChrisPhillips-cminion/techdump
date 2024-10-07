@@ -10,7 +10,7 @@ spec:
   license:
     # By installing this product you accept the license terms at https://ibm.biz/ea-license
     accept: true
-    license: "L-HRZF-DWHH7A"
+    license: L-HRZF-DWHH7A
     use: "EventAutomationProduction"
   adminApi: {}
   adminUI:
@@ -58,7 +58,7 @@ spec:
       storage:
         type: persistent-claim
         size: 4Gi
-        class: ocs-storage-class-rbd
+        class: ocs-storagecluster-rbd
     zookeeper:
       replicas: 3
       metricsConfig:
@@ -70,7 +70,7 @@ spec:
       storage:
         type: persistent-claim
         size: 2Gi
-        class: ocs-storage-class-rbd
+        class: ocs-storagecluster-rbd
 ---
 kind: Secret
 apiVersion: v1
