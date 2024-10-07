@@ -1,0 +1,2562 @@
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: EventStreams
+metadata:
+  labels:
+    backup.eventstreams.ibm.com/component: eventstreams
+  name: min-prod-scram
+spec:
+  version: latest
+  license:
+    # By installing this product you accept the license terms at https://ibm.biz/ea-license
+    accept: true
+    license: “L-HRZF-DWHH7A”
+    use: "EventAutomationProduction"
+  adminApi: {}
+  adminUI:
+    authentication:
+      - type: scram-sha-512
+  apicurioRegistry: {}
+  collector: {}
+  restProducer: {}
+  strimziOverrides:
+    entityOperator:
+      topicOperator: {}
+      userOperator: {}
+    kafka:
+      replicas: 3
+      authorization:
+        type: simple
+      config:
+        inter.broker.protocol.version: "3.7"
+        log.cleaner.threads: 6
+        num.io.threads: 24
+        num.network.threads: 9
+        num.replica.fetchers: 3
+        offsets.topic.replication.factor: 3
+        default.replication.factor: 3
+        min.insync.replicas: 2
+      listeners:
+        - name: external
+          port: 9094
+          type: route
+          tls: true
+          authentication:
+            type: scram-sha-512
+        - name: tls
+          port: 9093
+          type: internal
+          tls: true
+          authentication:
+            type: tls
+      metricsConfig:
+        type: jmxPrometheusExporter
+        valueFrom:
+          configMapKeyRef:
+            key: kafka-metrics-config.yaml
+            name: minimal-prod-metrics-config
+      storage:
+        type: persistent-claim
+        size: 4Gi
+        class: ocs-storage-class-rbd
+    zookeeper:
+      replicas: 3
+      metricsConfig:
+        type: jmxPrometheusExporter
+        valueFrom:
+          configMapKeyRef:
+            key: zookeeper-metrics-config.yaml
+            name: minimal-prod-metrics-config
+      storage:
+        type: persistent-claim
+        size: 2Gi
+        class: ocs-storage-class-rbd
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: my-password-secret
+  namespace: eventstreams
+data:
+  # passw0rd
+  password: cGFzc3cwcmQ=
+type: Opaque
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student1
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student1
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student2
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student2
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student3
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student3
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student4
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student4
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student5
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student5
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student6
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student6
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student7
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student7
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student8
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student8
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student9
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student9
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student10
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student10
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student11
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student11
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student12
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student12
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student13
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student13
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student14
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student14
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student15
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student15
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student16
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student16
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student17
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student17
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student18
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student18
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student19
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student19
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student20
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student20
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student21
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student21
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student22
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student22
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student23
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student23
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student24
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student24
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student25
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student25
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student26
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student26
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student27
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student27
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student28
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student28
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student29
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student29
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student30
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student30
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student31
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student31
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student32
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student32
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student33
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student33
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student34
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student34
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student35
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student35
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student36
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student36
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student37
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student37
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student38
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student38
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student39
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student39
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
+
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaUser
+metadata:
+  name: student40
+  namespace: eventstreams
+  labels:
+    app.kubernetes.io/instance: min-prod-scram
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: my-password-secret
+          key: password
+  authorization:
+    acls:
+      - operations:
+          - Alter
+          - DescribeConfigs
+        resource:
+          type: cluster
+      - operations:
+          - Create
+          - Read
+          - Write
+          - Delete
+          - DescribeConfigs
+          - Alter
+          - AlterConfigs
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operations:
+          - Alter
+          - Read
+        resource:
+          name: __schema_
+          patternType: prefix
+          type: topic
+      - operations:
+          - Read
+          - Delete
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+---
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  name: student40
+  labels:
+    eventstreams.ibm.com/cluster: min-prod-scram
+spec:
+  partitions: 1
+  replicas: 1
