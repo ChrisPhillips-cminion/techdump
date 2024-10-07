@@ -58,7 +58,7 @@ spec:
       storage:
         type: persistent-claim
         size: 4Gi
-        class: ocs-storagecluster-rbd
+        class: ocs-storagecluster-ceph-rbd
     zookeeper:
       replicas: 3
       metricsConfig:
@@ -70,7 +70,7 @@ spec:
       storage:
         type: persistent-claim
         size: 2Gi
-        class: ocs-storagecluster-rbd
+        class: ocs-storagecluster-ceph-rbd
 ---
 kind: Secret
 apiVersion: v1
